@@ -388,39 +388,39 @@ class DatabaseTest extends TestCase
         return [
             'mode_all_with_store_data' => [
                 'options' => static fn (self $testCase) => $testCase->getOptionsWithStoreData($connectionMock),
-                'mode' => \Zend_Cache::CLEANING_MODE_ALL,
+                'mode' => \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_ALL,
                 'expected' => false
 
             ],
             'mode_all_without_store_data' => [
                 'options' => static fn (self $testCase) => $testCase->getOptionsWithoutStoreData($connectionMock),
-                'mode' => \Zend_Cache::CLEANING_MODE_ALL,
+                'mode' => \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_ALL,
                 'expected' => false
             ],
             'mode_old_with_store_data' => [
                 'options' => static fn (self $testCase) => $testCase->getOptionsWithStoreData($connectionMock),
-                'mode' => \Zend_Cache::CLEANING_MODE_OLD,
+                'mode' => \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_OLD,
                 'expected' => true
 
             ],
             'mode_old_without_store_data' => [
                 'options' => static fn (self $testCase) => $testCase->getOptionsWithoutStoreData($connectionMock),
-                'mode' => \Zend_Cache::CLEANING_MODE_OLD,
+                'mode' => \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_OLD,
                 'expected' => true
             ],
             'mode_matching_tag_without_store_data' => [
                 'options' => static fn (self $testCase) => $testCase->getOptionsWithoutStoreData($connectionMock),
-                'mode' => \Zend_Cache::CLEANING_MODE_MATCHING_TAG,
+                'mode' => \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG,
                 'expected' => true
             ],
             'mode_not_matching_tag_without_store_data' => [
                 'options' => static fn (self $testCase) => $testCase->getOptionsWithoutStoreData($connectionMock),
-                'mode' => \Zend_Cache::CLEANING_MODE_NOT_MATCHING_TAG,
+                'mode' => \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_NOT_MATCHING_TAG,
                 'expected' => true
             ],
             'mode_matching_any_tag_without_store_data' => [
                 'options' => static fn (self $testCase) => $testCase->getOptionsWithoutStoreData($connectionMock),
-                'mode' => \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+                'mode' => \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_ANY_TAG,
                 'expected' => true
             ]
         ];

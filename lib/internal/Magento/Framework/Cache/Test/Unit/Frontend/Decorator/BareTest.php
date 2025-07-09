@@ -43,7 +43,7 @@ class BareTest extends TestCase
             ['load', ['record_id'], '111'],
             ['save', ['record_value', 'record_id', ['tag'], 555], true],
             ['remove', ['record_id'], true],
-            ['clean', [\Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG, ['tag']], true],
+            ['clean', [\Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_ANY_TAG, ['tag']], true],
             ['getBackend', [], static fn (self $testCase) => $testCase->createZendCacheBackendMock()],
             ['getLowLevelFrontend', [], static fn (self $testCase) => $testCase->createZendCacheCoreMock()],
         ];
@@ -51,11 +51,11 @@ class BareTest extends TestCase
 
     public function createZendCacheBackendMock()
     {
-        return $this->createMock(\Zend_Cache_Backend::class);
+        return $this->createMock(\Psr\Cache\CacheItemPoolInterface::class);
     }
 
     public function createZendCacheCoreMock()
     {
-        return $this->createMock(\Zend_Cache_Core::class);
+        return $this->createMock(\Psr\Cache\CacheItemPoolInterface::class);
     }
 }

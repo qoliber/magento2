@@ -6,6 +6,8 @@
 
 namespace Magento\Framework\Acl\Data;
 
+use Magento\Framework\Cache\FrontendInterface;
+
 /**
  * ACL data cache layer.
  * @package Magento\Framework\Acl\Data
@@ -84,7 +86,7 @@ class Cache implements CacheInterface
     /**
      * {@inheritdoc}
      */
-    public function clean($mode = \Zend_Cache::CLEANING_MODE_MATCHING_TAG, array $tags = [])
+    public function clean($mode = FrontendInterface::CLEANING_MODE_MATCHING_TAG, array $tags = [])
     {
         $this->aclBuilder->resetRuntimeAcl();
         return $this->cache->clean($mode, array_merge($tags, [$this->cacheTag]));

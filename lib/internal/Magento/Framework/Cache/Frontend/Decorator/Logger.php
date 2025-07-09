@@ -42,7 +42,7 @@ class Logger extends Bare
     /**
      * @inheritdoc
      */
-    public function clean($mode = \Zend_Cache::CLEANING_MODE_ALL, array $tags = [])
+    public function clean($mode = \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_ALL, array $tags = [])
     {
         $result = parent::clean($mode, $tags);
         $this->log(compact('tags', 'mode'));

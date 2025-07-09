@@ -1,0 +1,474 @@
+name: mag247
+services:
+  db:
+    command:
+      - mysqld
+      - --max_allowed_packet=1024M
+      - --explicit_defaults_for_timestamp=on
+    environment:
+      MYSQL_DATABASE: magento
+      MYSQL_HISTFILE: /sql_history/.sql_history
+      MYSQL_PASSWORD: magento
+      MYSQL_ROOT_PASSWORD: magento
+      MYSQL_USER: magento
+    hostname: mag247-mariadb
+    image: docker.io/wardenenv/mariadb:10.6
+    labels:
+      dev.orbstack.domains: pma.mag247.test/?db=magento
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: dbdata
+        target: /var/lib/mysql
+        volume: {}
+      - type: volume
+        source: sqlhistory
+        target: /sql_history
+        volume: {}
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/db/qden.conf
+        target: /etc/mysql/conf.d/qden.cnf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.qtools/tools/.warden/global/db/my.cnf
+        target: /root/.my.cnf
+        bind:
+          create_host_path: true
+  nginx:
+    depends_on:
+      php-fpm:
+        condition: service_started
+        required: true
+    environment:
+      NGINX_PUBLIC: /pub
+      NGINX_TEMPLATE: magento2.conf
+      XDEBUG_CONNECT_BACK_HOST: host.docker.internal
+    hostname: mag247-nginx
+    image: docker.io/wardenenv/nginx:1.16
+    labels:
+      dev.orbstack.domains: mag247.test
+      traefik.docker.network: mag247_default
+      traefik.enable: "false"
+      traefik.http.routers.mag247-nginx.priority: "2"
+      traefik.http.routers.mag247-nginx.rule: HostRegexp("{subdomain:.+}.mag247.test") || Host("mag247.test")
+      traefik.http.routers.mag247-nginx.tls: "true"
+      traefik.http.services.mag247-nginx.loadbalancer.server.port: "80"
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: appdata
+        target: /var/www/html
+        volume: {}
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/app
+        target: /var/www/html/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.qtools/tools/.warden/global/placehoder/nginx/default.d/placeholder.conf
+        target: /etc/nginx/default.d/placeholder.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.qtools/tools/.warden/global/placehoder/placeholder.png
+        target: /var/www/html/pub/media/qtools/placeholder.png
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/pub/media
+        target: /var/www/html/pub/media
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.ssh
+        target: /home/www-data/.ssh
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/nginx/default.d/qden.conf
+        target: /etc/nginx/default.d/qden.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/nginx/conf.d/qden.conf
+        target: /etc/nginx/conf.d/qden.conf
+        bind:
+          create_host_path: true
+  opensearch:
+    environment:
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: -Xms2g -Xmx2g
+      discovery.type: single-node
+    hostname: mag247-opensearch
+    image: docker.io/wardenenv/opensearch:2.12
+    labels:
+      dev.orbstack.domains: osd.mag247.test
+      traefik.docker.network: mag247_default
+      traefik.enable: "true"
+      traefik.http.routers.mag247-opensearch.rule: Host(`opensearch.mag247.test`)
+      traefik.http.routers.mag247-opensearch.tls: "true"
+      traefik.http.services.mag247-opensearch.loadbalancer.server.port: "9200"
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: osdata
+        target: /usr/share/opensearch/data
+        volume: {}
+  opensearch-dashboards:
+    depends_on:
+      opensearch:
+        condition: service_started
+        required: true
+    domainname: osd.mag247.test
+    environment:
+      DISABLE_SECURITY_DASHBOARDS_PLUGIN: "true"
+      OPENSEARCH_HOSTS: http://opensearch:9200
+    hostname: mag247-opensearch-dashboards
+    image: opensearchproject/opensearch-dashboards:2.12.0
+    labels:
+      dev.orbstack.domains: osd.mag247.test
+      traefik.docker.network: mag247_default
+      traefik.enable: "true"
+      traefik.http.routers.mag247-opensearch-dashboards.rule: Host("osd.mag247.test")
+      traefik.http.routers.mag247-opensearch-dashboards.tls: "true"
+      traefik.http.services.mag247-opensearch-dashboards.loadbalancer.server.port: "5601"
+    networks:
+      default: null
+  php-debug:
+    depends_on:
+      php-fpm:
+        condition: service_started
+        required: true
+    environment:
+      CHOWN_DIR_LIST: 'app pub/static pub/media /bash_history /home/www-data/.ssh '
+      COMPOSER_MEMORY_LIMIT: "-1"
+      COMPOSER_VERSION: "2"
+      HISTFILE: /bash_history/.bash_history
+      MAGE_DEBUG_SHOW_ARGS: "1"
+      NODE_VERSION: "20"
+      PHP_IDE_CONFIG: serverName=mag247-docker
+      SSH_AUTH_SOCK: /tmp/ssh-auth.sock
+      TRAEFIK_DOMAIN: mag247.test
+      TRAEFIK_SUBDOMAIN: app
+      WARDEN_CHOWN_DIR_LIST: 'app pub/static pub/media /bash_history /home/www-data/.ssh '
+    extra_hosts:
+      - app.mag247.test=192.168.117.2
+      - mag247.test=192.168.117.2
+    hostname: mag247-php-debug
+    image: docker.io/wardenenv/php-fpm:8.3-magento2-xdebug3
+    labels:
+      dev.orbstack.domains: mag247.test
+    networks:
+      default: null
+    volumes:
+      - type: bind
+        source: /Users/jakub/.warden/ssl/rootca/certs
+        target: /etc/ssl/warden-rootca-cert
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.composer
+        target: /home/www-data/.composer
+        bind:
+          create_host_path: true
+      - type: volume
+        source: appdata
+        target: /var/www/html
+        volume: {}
+      - type: volume
+        source: bashhistory
+        target: /bash_history
+        volume: {}
+      - type: bind
+        source: /Users/jakub/.ssh
+        target: /home/www-data/.ssh
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /run/host-services/ssh-auth.sock
+        target: /run/host-services/ssh-auth.sock
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/app
+        target: /var/www/html/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/php/qden.conf
+        target: /etc/php-fpm.d/qden.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/php.d/qden.ini
+        target: /etc/php.d/qden.ini
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.qtools/tools/.warden/global/php/parseQToolsParams.php
+        target: /parseQToolsParams.php
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.qtools/tools/.warden/global/php/parseQToolsParams.conf
+        target: /etc/php-fpm.d/parseQToolsParams.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/pub/media
+        target: /var/www/html/pub/media
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/nginx/default.d/qden.conf
+        target: /etc/nginx/default.d/qden.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/nginx/conf.d/qden.conf
+        target: /etc/nginx/conf.d/qden.conf
+        bind:
+          create_host_path: true
+  php-fpm:
+    depends_on:
+      db:
+        condition: service_started
+        required: true
+    environment:
+      CHOWN_DIR_LIST: 'app pub/static pub/media /bash_history /home/www-data/.ssh '
+      COMPOSER_MEMORY_LIMIT: "-1"
+      COMPOSER_VERSION: "2"
+      HISTFILE: /bash_history/.bash_history
+      MAGE_DEBUG_SHOW_ARGS: "1"
+      NODE_VERSION: "20"
+      SSH_AUTH_SOCK: /tmp/ssh-auth.sock
+      TRAEFIK_DOMAIN: mag247.test
+      TRAEFIK_SUBDOMAIN: app
+      WARDEN_CHOWN_DIR_LIST: 'app pub/static pub/media /bash_history /home/www-data/.ssh '
+    extra_hosts:
+      - app.mag247.test=192.168.117.2
+      - mag247.test=192.168.117.2
+    hostname: mag247-php-fpm
+    image: docker.io/wardenenv/php-fpm:8.3-magento2
+    labels:
+      dev.orbstack.domains: mag247.test
+      traefik.docker.network: mag247_default
+      traefik.enable: "true"
+      traefik.http.routers.mag247-livereload.priority: "3"
+      traefik.http.routers.mag247-livereload.rule: ' (HostRegexp(`{subdomain:.+}.mag247.test`) || Host(`mag247.test`)) && (Path(`/livereload.js`) || Path(`/livereload`))'
+      traefik.http.routers.mag247-livereload.service: mag247-livereload
+      traefik.http.routers.mag247-livereload.tls: "true"
+      traefik.http.services.mag247-livereload.loadbalancer.server.port: "35729"
+    networks:
+      default: null
+    volumes:
+      - type: bind
+        source: /Users/jakub/.warden/ssl/rootca/certs
+        target: /etc/ssl/warden-rootca-cert
+        read_only: true
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.composer
+        target: /home/www-data/.composer
+        bind:
+          create_host_path: true
+      - type: volume
+        source: appdata
+        target: /var/www/html
+        volume: {}
+      - type: volume
+        source: bashhistory
+        target: /bash_history
+        volume: {}
+      - type: bind
+        source: /Users/jakub/.ssh
+        target: /home/www-data/.ssh
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /run/host-services/ssh-auth.sock
+        target: /run/host-services/ssh-auth.sock
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/app
+        target: /var/www/html/app
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/php/qden.conf
+        target: /etc/php-fpm.d/qden.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/php.d/qden.ini
+        target: /etc/php.d/qden.ini
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.qtools/tools/.warden/global/php/parseQToolsParams.php
+        target: /parseQToolsParams.php
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Users/jakub/.qtools/tools/.warden/global/php/parseQToolsParams.conf
+        target: /etc/php-fpm.d/parseQToolsParams.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/pub/media
+        target: /var/www/html/pub/media
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/nginx/default.d/qden.conf
+        target: /etc/nginx/default.d/qden.conf
+        bind:
+          create_host_path: true
+      - type: bind
+        source: /Volumes/qoliber/contributions/pure-magento2/.warden/nginx/conf.d/qden.conf
+        target: /etc/nginx/conf.d/qden.conf
+        bind:
+          create_host_path: true
+  pma:
+    domainname: pma.mag247.test
+    environment:
+      MYSQL_DATABASE: '"magento"'
+      PMA_ABSOLUTE_URI: https://pma.mag247.test
+      PMA_HOSTS: mag247-db-1
+      PMA_PASSWORD: magento
+      PMA_USER: root
+    hostname: mag247-pma
+    image: phpmyadmin
+    labels:
+      dev.orbstack.domains: pma.mag247.test/?db=magento
+      traefik.docker.network: mag247_default
+      traefik.enable: "true"
+      traefik.http.routers.mag247-pma.rule: Host("pma.mag247.test")
+      traefik.http.routers.mag247-pma.tls: "true"
+      traefik.http.services.mag247-pma.loadbalancer.server.port: "80"
+    networks:
+      default: null
+  rabbitmq:
+    domainname: rabbitmq.mag247.test
+    environment:
+      RABBITMQ_DEFAULT_PASS: guest
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_VHOST: /
+    hostname: mag247-rabbitmq
+    image: docker.io/wardenenv/rabbitmq:3.13
+    labels:
+      dev.orbstack.domains: rabbitmq.mag247.test
+      traefik.docker.network: mag247_default
+      traefik.enable: "true"
+      traefik.http.routers.mag247-rabbitmq.rule: Host(`rabbitmq.mag247.test`)
+      traefik.http.routers.mag247-rabbitmq.tls: "true"
+      traefik.http.services.mag247-rabbitmq.loadbalancer.server.port: "15672"
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: rabbitmq
+        target: /var/lib/rabbitmq
+        volume: {}
+  redis:
+    hostname: mag247-redis
+    image: docker.io/wardenenv/redis:7.2
+    labels:
+      dev.orbstack.domains: mag247.test
+    networks:
+      default: null
+    volumes:
+      - type: volume
+        source: redis
+        target: /data
+        volume: {}
+  varnish:
+    depends_on:
+      nginx:
+        condition: service_started
+        required: true
+    hostname: mag247-varnish
+    image: docker.io/wardenenv/varnish:7.5
+    labels:
+      dev.orbstack.domains: mag247.test
+      traefik.docker.network: mag247_default
+      traefik.enable: "true"
+      traefik.http.routers.mag247-varnish.priority: "1"
+      traefik.http.routers.mag247-varnish.rule: HostRegexp("{subdomain:.+}.mag247.test") || Host("mag247.test")
+      traefik.http.routers.mag247-varnish.tls: "true"
+      traefik.http.services.mag247-varnish.loadbalancer.server.port: "80"
+    networks:
+      default: null
+networks:
+  default:
+    name: mag247_default
+    labels:
+      dev.warden.environment.name: mag247
+      dev.warden.environment.type: magento2
+volumes:
+  appdata:
+    name: mag247_appdata
+  bashhistory:
+    name: mag247_bashhistory
+  dbdata:
+    name: mag247_dbdata
+  osdata:
+    name: mag247_osdata
+  rabbitmq:
+    name: mag247_rabbitmq
+  redis:
+    name: mag247_redis
+  sqlhistory:
+    name: mag247_sqlhistory
+x-environment:
+  - OPENSEARCH_JAVA_OPTS=-Xms2g -Xmx2g
+  - RABBITMQ_DEFAULT_USER=guest
+  - RABBITMQ_DEFAULT_PASS=guest
+  - RABBITMQ_DEFAULT_VHOST=/
+  - 'CHOWN_DIR_LIST=pub/media /bash_history /home/www-data/.ssh '
+  - 'CHOWN_DIR_LIST=app pub/static pub/media /bash_history /home/www-data/.ssh '
+  - 'WARDEN_CHOWN_DIR_LIST=app pub/static pub/media /bash_history /home/www-data/.ssh '
+x-extra_hosts:
+  - mag247.test:192.168.117.2
+  - app.mag247.test:192.168.117.2
+  - mag247.test:192.168.117.2
+x-labels:
+  - dev.orbstack.domains=mag247.test
+  - dev.orbstack.domains=mag247.test
+  - traefik.http.routers.mag247-nginx.rule=HostRegexp("{subdomain:.+}.mag247.test") || Host("mag247.test")
+  - dev.orbstack.domains=pma.mag247.test/?db=magento
+  - dev.orbstack.domains=osd.mag247.test
+  - dev.orbstack.domains=mag247.test
+  - traefik.http.routers.mag247-varnish.rule=HostRegexp("{subdomain:.+}.mag247.test") || Host("mag247.test")
+  - dev.orbstack.domains=rabbitmq.mag247.test
+  - dev.orbstack.domains=mag247.test
+x-volumes:
+  - /Users/jakub/.warden/ssl/rootca/certs:/etc/ssl/warden-rootca-cert:ro
+  - /Users/jakub/.composer:/home/www-data/.composer:cached
+  - .//:/var/www/html:cached
+  - bashhistory:/bash_history
+  - sshdirectory:/home/www-data/.ssh
+  - /run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock
+  - ./app:/var/www/html/app
+  - ./.warden/php/qden.conf:/etc/php-fpm.d/qden.conf
+  - ./.warden/php.d/qden.ini:/etc/php.d/qden.ini
+  - ~/.qtools/tools/.warden/global/php/parseQToolsParams.php:/parseQToolsParams.php
+  - ~/.qtools/tools/.warden/global/php/parseQToolsParams.conf:/etc/php-fpm.d/parseQToolsParams.conf
+  - ./app:/var/www/html/app
+  - ~/.qtools/tools/.warden/global/placehoder/nginx/default.d/placeholder.conf:/etc/nginx/default.d/placeholder.conf
+  - ~/.qtools/tools/.warden/global/placehoder/placeholder.png:/var/www/html/pub/media/qtools/placeholder.png
+  - ./.warden/db/qden.conf:/etc/mysql/conf.d/qden.cnf
+  - ~/.qtools/tools/.warden/global/db/my.cnf:/root/.my.cnf
+  - .//pub/media:/var/www/html/pub/media:cached
+  - appdata:/var/www/html
+  - ./pub/media:/var/www/html/pub/media:cached
+  - ~/.ssh:/home/www-data/.ssh
+  - ./.warden/nginx/default.d/qden.conf:/etc/nginx/default.d/qden.conf
+  - ./.warden/nginx/conf.d/qden.conf:/etc/nginx/conf.d/qden.conf

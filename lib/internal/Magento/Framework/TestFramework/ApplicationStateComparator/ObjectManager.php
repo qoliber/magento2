@@ -51,10 +51,7 @@ class ObjectManager extends TestFrameworkObjectManager implements ObjectManagerI
         'Magento\RemoteStorage\Model\Filesystem\Directory\WriteFactory',
         'customRemoteFilesystem',
         'Magento\Framework\App\ResourceConnection\Proxy',
-        'Magento\Framework\App\Cache\Frontend\Factory',
-        'Magento\Framework\App\Cache\Frontend\Pool',
-        'Magento\Framework\App\Cache\Type\FrontendPool',
-        'Magento\Framework\App\Cache\Type\Config',
+        
         'Magento\Framework\ObjectManager\Config\Reader\DomFactory',
         'Magento\Framework\Serialize\Serializer\Serialize',
         'Magento\Framework\App\ObjectManager\ConfigLoader',

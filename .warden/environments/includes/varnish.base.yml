@@ -1,0 +1,31 @@
+#x-labels: &labels
+#  traefik.http.routers.justparasols-jbm2-varnish.rule: Host("justparasols.test")
+#  traefik.http.middlewares.justparasols-jbm2-varnish.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-CODE: justparasols
+#  traefik.http.middlewares.justparasols-jbm2-varnish.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-TYPE: website
+#  traefik.http.routers.justparasols-jbm2-varnish.middlewares: justparasols-jbm2-varnish@docker
+#  traefik.http.services.justparasols-jbm2-varnish.loadbalancer.server.port: "80"
+#  traefik.http.routers.justparasols-jbm2-varnish.tls: "true"
+#  traefik.http.routers.justparasols-jbm2-varnish.priority: "3"
+#
+#  traefik.http.routers.justgardensofas-jbm2-varnish.rule: Host("justgardensofas.test")
+#  traefik.http.middlewares.justgardensofas-jbm2-varnish.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-CODE: justgardensofas
+#  traefik.http.middlewares.justgardensofas-jbm2-varnish.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-TYPE: website
+#  traefik.http.routers.justgardensofas-jbm2-varnish.middlewares: justgardensofas-jbm2-varnish@docker
+#  traefik.http.services.justgardensofas-jbm2-varnish.loadbalancer.server.port: "80"
+#  traefik.http.routers.justgardensofas-jbm2-varnish.tls: "true"
+#  traefik.http.routers.justgardensofas-jbm2-varnish.priority: "4"
+#
+#  traefik.http.routers.justgardendining-jbm2-varnish.rule: Host("justgardendining.test")
+#  traefik.http.middlewares.justgardendining-jbm2-varnish.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-CODE: justgardendining
+#  traefik.http.middlewares.justgardendining-jbm2-varnish.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-TYPE: store
+#  traefik.http.routers.justgardendining-jbm2-varnish.middlewares: justgardendining-jbm2-varnish@docker
+#  traefik.http.services.justgardendining-jbm2-varnish.loadbalancer.server.port: "80"
+#  traefik.http.routers.justgardendining-jbm2-varnish.tls: "true"
+#  traefik.http.routers.justgardendining-jbm2-varnish.priority: "5"
+#
+#
+#services:
+#  varnish:
+#    labels: *labels
+#
+#

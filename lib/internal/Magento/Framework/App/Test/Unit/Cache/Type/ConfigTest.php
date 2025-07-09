@@ -82,7 +82,7 @@ class ConfigTest extends TestCase
 
     public function createZendCacheCoreMock()
     {
-        return $this->createMock(\Zend_Cache_Core::class);
+        return $this->createMock(\Psr\Cache\CacheItemPoolInterface::class);
     }
 
     public function testSave(): void
@@ -112,13 +112,13 @@ class ConfigTest extends TestCase
         )->method(
             'clean'
         )->with(
-            \Zend_Cache::CLEANING_MODE_MATCHING_TAG,
+            \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG,
             [Config::CACHE_TAG]
         )->willReturn(
             $expectedResult
         );
         $actualResult = $this->model->clean(
-            \Zend_Cache::CLEANING_MODE_ALL,
+            \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_ALL,
             ['ignored_tag_one', 'ignored_tag_two']
         );
         $this->assertSame($expectedResult, $actualResult);
@@ -132,13 +132,13 @@ class ConfigTest extends TestCase
         )->method(
             'clean'
         )->with(
-            \Zend_Cache::CLEANING_MODE_MATCHING_TAG,
+            \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG,
             ['test_tag_one', 'test_tag_two', Config::CACHE_TAG]
         )->willReturn(
             $expectedResult
         );
         $actualResult = $this->model->clean(
-            \Zend_Cache::CLEANING_MODE_MATCHING_TAG,
+            \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG,
             ['test_tag_one', 'test_tag_two']
         );
         $this->assertSame($expectedResult, $actualResult);
@@ -155,16 +155,16 @@ class ConfigTest extends TestCase
         $this->frontendMock
             ->method('clean')
             ->willReturnCallback(function ($arg1, $arg2) use ($fixtureResultOne, $fixtureResultTwo) {
-                if ($arg1 == \Zend_Cache::CLEANING_MODE_MATCHING_TAG &&
+                if ($arg1 == \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG &&
                     $arg2 == ['test_tag_one', Config::CACHE_TAG]) {
                     return $fixtureResultOne;
-                } elseif ($arg1 == \Zend_Cache::CLEANING_MODE_MATCHING_TAG &&
+                } elseif ($arg1 == \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG &&
                     $arg2 == ['test_tag_two', Config::CACHE_TAG]) {
                     return $fixtureResultTwo;
                 }
             });
         $actualResult = $this->model->clean(
-            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+            \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_ANY_TAG,
             ['test_tag_one', 'test_tag_two']
         );
         $this->assertEquals($expectedResult, $actualResult);

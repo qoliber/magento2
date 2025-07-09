@@ -1736,7 +1736,7 @@ class Mysql extends \Zend_Db_Adapter_Pdo_Mysql implements AdapterInterface, Rese
         if ($tableName === null) {
             $this->_ddlCache = [];
             if ($this->_cacheAdapter) {
-                $this->_cacheAdapter->clean(\Zend_Cache::CLEANING_MODE_MATCHING_TAG, [self::DDL_CACHE_TAG]);
+                $this->_cacheAdapter->clean(\Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG, [self::DDL_CACHE_TAG]);
             }
         } else {
             $cacheKey = $this->_getTableName($tableName, $schemaName);

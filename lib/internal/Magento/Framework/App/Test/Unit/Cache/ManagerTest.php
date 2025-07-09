@@ -117,8 +117,8 @@ class ManagerTest extends TestCase
             ['bar', $frontendBar],
             ['baz', $frontendBaz],
         ]);
-        $backendOne = $this->getMockForAbstractClass(\Zend_Cache_Backend_Interface::class);
-        $backendTwo = $this->getMockForAbstractClass(\Zend_Cache_Backend_Interface::class);
+        $backendOne = $this->getMockForAbstractClass(\Psr\Cache\CacheItemPoolInterface::class);
+        $backendTwo = $this->getMockForAbstractClass(\Psr\Cache\CacheItemPoolInterface::class);
         $frontendFoo->expects($this->once())->method('getBackend')->willReturn($backendOne);
         $frontendBar->expects($this->once())->method('getBackend')->willReturn($backendOne);
         $frontendBaz->expects($this->once())->method('getBackend')->willReturn($backendTwo);

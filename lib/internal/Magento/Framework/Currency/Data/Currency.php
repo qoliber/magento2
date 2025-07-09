@@ -12,7 +12,7 @@ use Magento\Framework\Currency\Exception\CurrencyException;
 use Magento\Framework\NumberFormatter;
 use Symfony\Component\Intl\Countries;
 use Symfony\Component\Intl\Currencies;
-use Zend_Cache_Core;
+use Magento\Framework\Cache\FrontendInterface;
 use Magento\Framework\CurrencyInterface;
 
 /**
@@ -29,7 +29,7 @@ class Currency
     public const LEFT = 32;
 
     /**
-     * @var Zend_Cache_Core
+     * @var FrontendInterface
      */
     private static $cache = null;
 
@@ -407,7 +407,7 @@ class Currency
     /**
      * Returns the set cache.
      *
-     * @return Zend_Cache_Core
+     * @return FrontendInterface
      */
     public static function getCache()
     {
@@ -417,10 +417,10 @@ class Currency
     /**
      * Sets a cache for Currency
      *
-     * @param Zend_Cache_Core $cache
+     * @param FrontendInterface $cache
      * @return void
      */
-    public static function setCache(Zend_Cache_Core $cache)
+    public static function setCache(FrontendInterface $cache)
     {
         self::$cache = $cache;
     }
@@ -455,9 +455,9 @@ class Currency
     public static function clearCache($tag = null): void
     {
         if ($tag) {
-            self::$cache->clean(\Zend_Cache::CLEANING_MODE_MATCHING_TAG, $tag);
+            self::$cache->clean(\Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_TAG, (array)$tag);
         } else {
-            self::$cache->clean(\Zend_Cache::CLEANING_MODE_ALL);
+            self::$cache->clean(\Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_ALL);
         }
     }
 

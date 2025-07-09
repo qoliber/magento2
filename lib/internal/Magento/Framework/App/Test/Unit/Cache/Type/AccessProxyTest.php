@@ -66,7 +66,7 @@ class AccessProxyTest extends TestCase
             ['load', ['record_id'], false, '111'],
             ['save', ['record_value', 'record_id', ['tag'], 555], true, false],
             ['remove', ['record_id'], true, false],
-            ['clean', [\Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG, ['tag']], true, false]
+            ['clean', [\Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_ANY_TAG, ['tag']], true, false]
         ];
     }
 }

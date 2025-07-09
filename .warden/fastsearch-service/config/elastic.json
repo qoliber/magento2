@@ -1,0 +1,9 @@
+{
+  "servers": [
+    {
+      "host": "opensearch",
+      "port": "9200"
+    }
+  ],
+  "indices_alias": "magento2"
+}

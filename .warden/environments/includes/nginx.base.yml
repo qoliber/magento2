@@ -1,0 +1,26 @@
+#x-labels: &labels
+#  traefik.http.routers.justparasols-jbm2-nginx.rule: Host("justparasols.test")
+#  traefik.http.middlewares.justparasols-jbm2-nginx.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-CODE: justparasols
+#  traefik.http.middlewares.justparasols-jbm2-nginx.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-TYPE: website
+#  traefik.http.routers.justparasols-jbm2-nginx.middlewares: justparasols-jbm2-nginx@docker
+#  traefik.http.routers.justparasols-jbm2-nginx.tls: "true"
+#  traefik.http.routers.justparasols-jbm2-nginx.priority: "3"
+#
+#  traefik.http.routers.justgardensofas-jbm2-nginx.rule: Host("justgardensofas.test")
+#  traefik.http.middlewares.justgardensofas-jbm2-nginx.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-CODE: justgardensofas
+#  traefik.http.middlewares.justgardensofas-jbm2-nginx.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-TYPE: website
+#  traefik.http.routers.justgardensofas-jbm2-nginx.middlewares: justgardensofas-jbm2-nginx@docker
+#  traefik.http.routers.justgardensofas-jbm2-nginx.tls: "true"
+#  traefik.http.routers.justgardensofas-jbm2-nginx.priority: "4"
+#
+#  traefik.http.routers.justgardendining-jbm2-nginx.rule: Host("justgardendining.test")
+#  traefik.http.middlewares.justgardendining-jbm2-nginx.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-CODE: justgardendining
+#  traefik.http.middlewares.justgardendining-jbm2-nginx.headers.customRequestHeaders.Q-TOOLS-MAGE-RUN-TYPE: store
+#  traefik.http.routers.justgardendining-jbm2-nginx.middlewares: justgardendining-jbm2-nginx@docker
+#  traefik.http.routers.justgardendining-jbm2-nginx.tls: "true"
+#  traefik.http.routers.justgardendining-jbm2-nginx.priority: "5"
+#
+#
+#services:
+#  nginx:
+#    labels: *labels

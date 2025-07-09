@@ -110,7 +110,7 @@ class FlushCacheByTags
         foreach ($this->cacheList as $cacheType) {
             if ($this->cacheState->isEnabled($cacheType)) {
                 $this->cachePool->get($cacheType)->clean(
-                    \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+                    \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_ANY_TAG,
                     $uniqueTags = $uniqueTags ?? \array_unique($tags)
                 );
             }

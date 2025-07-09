@@ -220,7 +220,7 @@ class CacheTest extends TestCase
         )->method(
             'clean'
         )->with(
-            \Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG,
+            \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_ANY_TAG,
             $expectedTags
         )->willReturn(
             true
@@ -235,7 +235,7 @@ class CacheTest extends TestCase
         )->method(
             'clean'
         )->with(
-            \Zend_Cache::CLEANING_MODE_ALL
+            \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_ALL
         )->willReturn(
             true
         );

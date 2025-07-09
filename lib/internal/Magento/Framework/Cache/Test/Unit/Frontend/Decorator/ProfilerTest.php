@@ -68,11 +68,11 @@ class ProfilerTest extends TestCase
 
     protected function getMockForZendCache()
     {
-        $adaptee = $this->createMock(\Zend_Cache_Core::class);
+        $adaptee = $this->createMock(\Psr\Cache\CacheItemPoolInterface::class);
         $frontendFactory = function () use ($adaptee) {
             return $adaptee;
         };
-        $lowLevelFrontend = new Zend($frontendFactory);
+        $lowLevelFrontend = new Symfony($frontendFactory);
         return $lowLevelFrontend;
     }
 
@@ -143,7 +143,7 @@ class ProfilerTest extends TestCase
             ],
             [
                 'clean',
-                [\Zend_Cache::CLEANING_MODE_MATCHING_ANY_TAG, ['tag']],
+                [\Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_MATCHING_ANY_TAG, ['tag']],
                 $backend,
                 $lowLevelFrontend,
                 'cache_clean',

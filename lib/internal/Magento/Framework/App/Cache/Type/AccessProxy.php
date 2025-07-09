@@ -99,7 +99,7 @@ class AccessProxy extends \Magento\Framework\Cache\Frontend\Decorator\Bare
     /**
      * {@inheritdoc}
      */
-    public function clean($mode = \Zend_Cache::CLEANING_MODE_ALL, array $tags = [])
+    public function clean($mode = \Magento\Framework\Cache\FrontendInterface::CLEANING_MODE_ALL, array $tags = [])
     {
         if (!$this->_isEnabled()) {
             return true;
