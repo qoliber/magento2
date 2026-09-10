@@ -32,6 +32,7 @@ use Magento\Setup\Module\Di\Compiler\Log\Writer\Console;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Helper\ProgressBar;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
@@ -41,6 +42,14 @@ use Symfony\Component\Console\Output\OutputInterface;
 class DiCompileCommand extends Command
 {
     public const NAME = 'setup:di:compile';
+
+    /**
+     * Compile without worker processes.
+     *
+     * Workers inherit the parent's open descriptors, so an environment where that is a problem -
+     * a networked cache backend, say - can turn them off, at the cost of a slower compile.
+     */
+    public const INPUT_KEY_SINGLE_PROCESS = 'single-process';
 
     /**
      * @var \Magento\Framework\App\DeploymentConfig
@@ -128,6 +137,12 @@ class DiCompileCommand extends Command
         $this->setName(self::NAME)
             ->setDescription(
                 'Generates DI configuration and all missing classes that can be auto-generated'
+            )
+            ->addOption(
+                self::INPUT_KEY_SINGLE_PROCESS,
+                null,
+                InputOption::VALUE_NONE,
+                'Compile in a single process instead of using worker processes.'
             );
         parent::configure();
     }
@@ -190,7 +205,10 @@ class DiCompileCommand extends Command
         ];
         $this->configureObjectManager($output);
 
-        $operations = $this->getOperationsConfiguration($compiledPathsList);
+        $operations = $this->getOperationsConfiguration(
+            $compiledPathsList,
+            (bool)$input->getOption(self::INPUT_KEY_SINGLE_PROCESS)
+        );
 
         try {
             $this->cleanupFilesystem(
@@ -327,7 +345,11 @@ class DiCompileCommand extends Command
     private function cleanupFilesystem($directoryCodeList)
     {
         foreach ($directoryCodeList as $code) {
-            $this->filesystem->getDirectoryWrite($code)->delete();
+            $directory = $this->filesystem->getDirectoryWrite($code);
+            $directory->delete();
+            // Recreate immediately. These directories are recreated lazily by whichever consumer
+            // touches them first, and compilation workers must not race each other to do it.
+            $directory->create();
         }
     }
 
@@ -383,11 +405,13 @@ class DiCompileCommand extends Command
      * Returns operations configuration
      *
      * @param array $compiledPathsList
+     * @param bool $singleProcess
      *
      * @return array
      */
     private function getOperationsConfiguration(
-        array $compiledPathsList
+        array $compiledPathsList,
+        bool $singleProcess = false
     ) {
         $excludePatterns = array_merge([], ...array_values($this->excludedPathsList));
 
@@ -408,6 +432,7 @@ class DiCompileCommand extends Command
                 'excludePatterns' => $excludePatterns,
             ],
             OperationFactory::INTERCEPTION => [
+                'single_process' => $singleProcess,
                 'intercepted_paths' => [
                     $compiledPathsList['application'],
                     $compiledPathsList['library'],
@@ -416,10 +441,13 @@ class DiCompileCommand extends Command
                 'path_to_store' => $compiledPathsList['generated_helpers'],
             ],
             OperationFactory::AREA_CONFIG_GENERATOR => [
-                $compiledPathsList['application'],
-                $compiledPathsList['library'],
-                $compiledPathsList['setup'],
-                $compiledPathsList['generated_helpers'],
+                'single_process' => $singleProcess,
+                'paths' => [
+                    $compiledPathsList['application'],
+                    $compiledPathsList['library'],
+                    $compiledPathsList['setup'],
+                    $compiledPathsList['generated_helpers'],
+                ],
             ],
             OperationFactory::INTERCEPTION_CACHE => [
                 $compiledPathsList['application'],

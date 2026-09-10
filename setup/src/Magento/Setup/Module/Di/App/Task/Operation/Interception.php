@@ -10,12 +10,19 @@ use Magento\Framework\Code\Generator\Io;
 use Magento\Framework\Filesystem\Driver\File;
 use Magento\Framework\Interception\Code\Generator\Interceptor;
 use Magento\Setup\Module\Di\App\Task\OperationInterface;
+use Magento\Framework\App\ResourceConnection;
+use Magento\Setup\Module\Di\App\Task\Parallel;
 use Magento\Setup\Module\Di\Code\Generator\InterceptionConfigurationBuilder;
 use Magento\Setup\Module\Di\Code\GeneratorFactory;
 use Magento\Setup\Module\Di\Code\Reader\ClassesScanner;
 
 class Interception implements OperationInterface
 {
+    /**
+     * Interceptors below this count are generated in-process; forking would cost more than it saves.
+     */
+    private const MIN_INTERCEPTORS_PER_WORKER = 200;
+
     /**
      * @var App\AreaList
      */
@@ -42,6 +49,11 @@ class Interception implements OperationInterface
     private $generatorFactory;
 
     /**
+     * @var ResourceConnection|null
+     */
+    private $resourceConnection;
+
+    /**
      * @param InterceptionConfigurationBuilder $interceptionConfigurationBuilder
      * @param App\AreaList $areaList
      * @param ClassesScanner $classesScanner
@@ -53,13 +65,15 @@ class Interception implements OperationInterface
         App\AreaList $areaList,
         ClassesScanner $classesScanner,
         GeneratorFactory $generatorFactory,
-        $data = []
+        $data = [],
+        ?ResourceConnection $resourceConnection = null
     ) {
         $this->interceptionConfigurationBuilder = $interceptionConfigurationBuilder;
         $this->areaList = $areaList;
         $this->data = $data;
         $this->classesScanner = $classesScanner;
         $this->generatorFactory = $generatorFactory;
+        $this->resourceConnection = $resourceConnection;
     }
 
     /**
@@ -97,7 +111,44 @@ class Interception implements OperationInterface
             ]
         );
         $configuration = $this->interceptionConfigurationBuilder->getInterceptionConfiguration($classesList);
-        $generator->generateList($configuration);
+
+        // Each interceptor is generated from an already-loaded source class into its own file, so
+        // the entries are independent. Io::writeResultFile() writes through a pid-suffixed
+        // temporary file and renames, so concurrent writers cannot corrupt each other.
+        $workers = !empty($this->data['single_process'])
+            ? 1
+            : Parallel::workerCount(count($configuration), self::MIN_INTERCEPTORS_PER_WORKER);
+        $chunks = $workers > 1
+            ? array_chunk($configuration, (int)ceil(count($configuration) / $workers), true)
+            : [$configuration];
+        // Keyed so a failing worker names the chunk it was given.
+        $keyed = [];
+        foreach (array_values($chunks) as $index => $chunk) {
+            $keyed['interceptor chunk ' . ($index + 1) . '/' . count($chunks)] = $chunk;
+        }
+        Parallel::each(
+            $keyed,
+            static function (array $chunk) use ($generator) {
+                $generator->generateList($chunk);
+            },
+            $workers,
+            null,
+            function () {
+                $this->closeInheritedConnections();
+            }
+        );
+    }
+
+    /**
+     * Drop connections inherited from the parent process, so each worker uses its own.
+     *
+     * @return void
+     */
+    private function closeInheritedConnections()
+    {
+        if ($this->resourceConnection !== null) {
+            $this->resourceConnection->closeConnection();
+        }
     }
 
     /**
